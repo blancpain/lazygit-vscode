@@ -134,8 +134,16 @@ export function deactivate() {}
 async function createWindow() {
   await reloadIfConfigChange();
 
-  let workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-  if (!workspaceFolder) workspaceFolder = os.homedir();
+  let workspaceFolder: string | undefined;
+  const activeEditor = vscode.window.activeTextEditor;
+
+  if (activeEditor && activeEditor.document.uri.scheme === "file") {
+    workspaceFolder = path.dirname(activeEditor.document.uri.fsPath);
+  } else if (vscode.workspace.workspaceFolders?.length) {
+    workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  } else {
+    workspaceFolder = os.homedir();
+  }
 
   assert(globalConfig.lazyGitPath, "Uncaught error: lazygitpath is undefined!");
   let lazyGitCommand = globalConfig.lazyGitPath;
